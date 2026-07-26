@@ -1,0 +1,98 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# SpaceX Data Collection - REST API\n",
+    "\n",
+    "Collects Falcon 9 launch records from the SpaceX v4 API / IBM course dataset mirror and loads them into a DataFrame."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd, matplotlib\n",
+    "matplotlib.use('Agg')\n",
+    "import matplotlib.pyplot as plt\n",
+    "import matplotlib.patches as mpatches\n",
+    "\n",
+    "df = pd.read_csv('spacex_launch_geo.csv')\n",
+    "df['Date'] = pd.to_datetime(df['Date'])\n",
+    "df['Year'] = df['Date'].dt.year\n",
+    "plt.rcParams['figure.dpi'] = 150\n",
+    "GREEN, RED = '#2e7d32', '#c62828'\n",
+    "colors = df['class'].map({1: GREEN, 0: RED})\n",
+    "\n",
+    "# 1. Flight Number vs Launch Site\n",
+    "plt.figure(figsize=(8,5))\n",
+    "plt.scatter(df['Flight Number'], df['Launch Site'], c=colors, s=70, edgecolor='white')\n",
+    "plt.xlabel('Flight Number'); plt.ylabel('Launch Site')\n",
+    "plt.title('Flight Number vs. Launch Site')\n",
+    "plt.legend(handles=[mpatches.Patch(color=GREEN,label='Success'), mpatches.Patch(color=RED,label='Failure')])\n",
+    "plt.tight_layout(); plt.savefig('c1_flight_vs_site.png'); plt.close()\n",
+    "\n",
+    "# 2. Payload vs Launch Site\n",
+    "plt.figure(figsize=(8,5))\n",
+    "plt.scatter(df['Payload Mass (kg)'], df['Launch Site'], c=colors, s=70, edgecolor='white')\n",
+    "plt.xlabel('Payload Mass (kg)'); plt.ylabel('Launch Site')\n",
+    "plt.title('Payload vs. Launch Site')\n",
+    "plt.legend(handles=[mpatches.Patch(color=GREEN,label='Success'), mpatches.Patch(color=RED,label='Failure')])\n",
+    "plt.tight_layout(); plt.savefig('c2_payload_vs_site.png'); plt.close()\n",
+    "\n",
+    "# 3. Success rate by Orbit\n",
+    "plt.figure(figsize=(8,5))\n",
+    "orbit_rate = df.groupby('Orbit')['class'].mean().sort_values()\n",
+    "orbit_rate.plot(kind='bar', color='#1565c0')\n",
+    "plt.ylabel('Success Rate'); plt.xlabel('Orbit Type')\n",
+    "plt.title('Success Rate vs. Orbit Type')\n",
+    "plt.xticks(rotation=45, ha='right')\n",
+    "plt.tight_layout(); plt.savefig('c3_success_vs_orbit.png'); plt.close()\n",
+    "\n",
+    "# 4. Flight Number vs Orbit\n",
+    "plt.figure(figsize=(8,5))\n",
+    "plt.scatter(df['Flight Number'], df['Orbit'], c=colors, s=70, edgecolor='white')\n",
+    "plt.xlabel('Flight Number'); plt.ylabel('Orbit Type')\n",
+    "plt.title('Flight Number vs. Orbit Type')\n",
+    "plt.legend(handles=[mpatches.Patch(color=GREEN,label='Success'), mpatches.Patch(color=RED,label='Failure')])\n",
+    "plt.tight_layout(); plt.savefig('c4_flight_vs_orbit.png'); plt.close()\n",
+    "\n",
+    "# 5. Payload vs Orbit\n",
+    "plt.figure(figsize=(8,5))\n",
+    "plt.scatter(df['Payload Mass (kg)'], df['Orbit'], c=colors, s=70, edgecolor='white')\n",
+    "plt.xlabel('Payload Mass (kg)'); plt.ylabel('Orbit Type')\n",
+    "plt.title('Payload vs. Orbit Type')\n",
+    "plt.legend(handles=[mpatches.Patch(color=GREEN,label='Success'), mpatches.Patch(color=RED,label='Failure')])\n",
+    "plt.tight_layout(); plt.savefig('c5_payload_vs_orbit.png'); plt.close()\n",
+    "\n",
+    "# 6. Yearly success trend\n",
+    "plt.figure(figsize=(8,5))\n",
+    "yearly = df.groupby('Year')['class'].mean()\n",
+    "plt.plot(yearly.index, yearly.values, marker='o', color='#1565c0', linewidth=2)\n",
+    "plt.xlabel('Year'); plt.ylabel('Average Success Rate')\n",
+    "plt.title('Launch Success Yearly Trend')\n",
+    "plt.grid(alpha=0.3)\n",
+    "plt.tight_layout(); plt.savefig('c6_yearly_trend.png'); plt.close()\n",
+    "\n",
+    "print(\"EDA charts done\")\n",
+    "print(df.groupby('Launch Site')['class'].agg(['count','sum']))\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -1,0 +1,69 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Data Wrangling\n",
+    "\n",
+    "Cleans the merged dataset: handles missing values, builds the binary landing-outcome label, and one-hot encodes categorical features for modeling."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "df = pd.read_csv('spacex_launch_geo.csv')\n",
+    "print(\"Raw shape:\", df.shape)\n",
+    "print(df.isnull().sum())\n",
+    "\n",
+    "# --- Handle missing values ---\n",
+    "# Payload Mass: fill missing with column mean\n",
+    "mean_payload = df['Payload Mass (kg)'].mean()\n",
+    "df['Payload Mass (kg)'] = df['Payload Mass (kg)'].fillna(mean_payload)\n",
+    "\n",
+    "# --- Create the binary landing-outcome label ---\n",
+    "# class: 1 = successful landing, 0 = failure / no attempt\n",
+    "bad_outcomes = {'None None', 'None ASDS', 'None RTLS', 'False ASDS', 'False Ocean', 'False RTLS'}\n",
+    "df['class'] = df['class'].astype(int)  # already provided as 0/1 in this dataset\n",
+    "\n",
+    "# --- Extract a simplified booster-version group for modeling ---\n",
+    "df['BoosterGroup'] = df['Booster Version'].str.extract(r'(F9 v1\\.0|F9 v1\\.1|F9 FT|F9 B4|F9 B5)')\n",
+    "df['BoosterGroup'] = df['BoosterGroup'].fillna('Other')\n",
+    "\n",
+    "# --- One-hot encode categorical features used for modeling ---\n",
+    "features_one_hot = pd.get_dummies(\n",
+    "    df[['Payload Mass (kg)', 'Orbit', 'Launch Site', 'BoosterGroup']],\n",
+    "    columns=['Orbit', 'Launch Site', 'BoosterGroup']\n",
+    ")\n",
+    "features_one_hot = features_one_hot.astype('float64')\n",
+    "\n",
+    "print(\"Wrangled feature matrix shape:\", features_one_hot.shape)\n",
+    "print(features_one_hot.head())\n",
+    "\n",
+    "# --- Save wrangled outputs for downstream EDA / SQL / ML notebooks ---\n",
+    "df.to_csv('dataset_part_2.csv', index=False)          # cleaned + labeled dataset\n",
+    "features_one_hot.to_csv('dataset_part_3.csv', index=False)  # ML-ready one-hot features\n",
+    "print(\"Saved dataset_part_2.csv (cleaned) and dataset_part_3.csv (one-hot features)\")\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
